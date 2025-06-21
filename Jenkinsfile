@@ -31,11 +31,15 @@ pipeline {
                 bat '''
                 if not exist "C:\\deploy\\myapp" mkdir C:\\deploy\\myapp
                 '''
-                // Dừng server Node.js hiện tại (nếu đang chạy)
+                // Dừng server Node.js hiện tại
                 bat '''
                 taskkill /IM node.exe /F || exit 0
                 '''
-                // Dùng robocopy để chỉ sao chép các file có thay đổi, loại bỏ .git
+                // Chờ 3 giây để đảm bảo process đã dừng
+                bat '''
+                timeout /t 3
+                '''
+                // Dùng robocopy để chỉ sao chép các file có thay đổi
                 bat '''
                 robocopy "%WORKSPACE%" "C:\\deploy\\myapp" /MIR /XD node_modules .git /LOG+:C:\\deploy\\robocopy.log & if %ERRORLEVEL% LEQ 1 exit 0
                 '''
@@ -44,10 +48,12 @@ pipeline {
                 cd C:\\deploy\\myapp
                 npm install
                 '''
-                // Chạy server Node.js
+                // Dùng pm2 để khởi động lại server
                 bat '''
                 cd C:\\deploy\\myapp
-                start node server.js
+                pm2 stop all || exit 0
+                pm2 start server.js --name myapp
+                pm2 save
                 '''
             }
         }
@@ -57,7 +63,7 @@ pipeline {
             echo 'Pipeline completed!'
         }
         failure {
-            echo 'Pipeline failed! Check C:\\deploy\\robocopy.log for details.'
+            echo 'Pipeline failed! Check C:\\deploy\\robocopy.log and pm2 logs (pm2 logs myapp) for details.'
         }
     }
 }

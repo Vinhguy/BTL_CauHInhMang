@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        nodejs "NodeJS" // Tên cấu hình Node.js trong Jenkins
+        nodejs "NodeJS"
     }
     stages {
         stage('Checkout') {
@@ -11,7 +11,7 @@ pipeline {
         }
         stage('Verify') {
             steps {
-                bat 'dir' // Lists files in workspace
+                bat 'dir'
             }
         }
         stage('Install Dependencies') {
@@ -22,35 +22,25 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building the application...'
-                // Nếu cần build, thêm lệnh: bat 'npm run build'
             }
         }
         stage('Deploy') {
             steps {
-                // Tạo thư mục deploy nếu chưa tồn tại
+                // Tạo thư mục deploy
                 bat '''
                 if not exist "C:\\deploy\\myapp" mkdir C:\\deploy\\myapp
                 '''
-                // Dừng server Node.js hiện tại
-                bat '''
-                taskkill /IM node.exe /F || exit 0
-                '''
-                // Dùng robocopy để chỉ sao chép các file có thay đổi
+                // Sao chép file
                 bat '''
                 robocopy "%WORKSPACE%" "C:\\deploy\\myapp" /MIR /XD node_modules .git /LOG+:C:\\deploy\\robocopy.log & if %ERRORLEVEL% LEQ 1 exit 0
                 '''
-                // Cài lại dependencies trong thư mục deploy
+                // Cài dependencies
                 bat '''
                 cd C:\\deploy\\myapp
                 npm install
                 '''
-                // Dùng pm2 để khởi động lại server
-                bat '''
-                cd C:\\deploy\\myapp
-                pm2 stop all || exit 0
-                pm2 start server.js --name myapp
-                pm2 save
-                '''
+                // Không cần taskkill, giả sử nodemon đã chạy
+                echo 'Deployed files, nodemon will auto-reload if running.'
             }
         }
     }
@@ -59,7 +49,7 @@ pipeline {
             echo 'Pipeline completed!'
         }
         failure {
-            echo 'Pipeline failed! Check C:\\deploy\\robocopy.log and pm2 logs (pm2 logs myapp) for details.'
+            echo 'Pipeline failed! Check C:\\deploy\\robocopy.log for details.'
         }
     }
 }

@@ -47,7 +47,7 @@ pipeline {
                 // Chạy server Node.js
                 bat '''
                 cd C:\\deploy\\myapp
-                start /B npm start
+                start node server.js
                 '''
             }
         }

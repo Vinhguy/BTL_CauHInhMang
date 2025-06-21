@@ -35,10 +35,6 @@ pipeline {
                 bat '''
                 taskkill /IM node.exe /F || exit 0
                 '''
-                // Chờ 3 giây để đảm bảo process đã dừng
-                bat '''
-                timeout /t 3
-                '''
                 // Dùng robocopy để chỉ sao chép các file có thay đổi
                 bat '''
                 robocopy "%WORKSPACE%" "C:\\deploy\\myapp" /MIR /XD node_modules .git /LOG+:C:\\deploy\\robocopy.log & if %ERRORLEVEL% LEQ 1 exit 0
